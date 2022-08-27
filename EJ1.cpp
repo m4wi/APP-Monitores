@@ -36,7 +36,6 @@ void Incremento::viewCount(){
   }
   else signal_m_mutex();
 }
-
 // #-----------------------------------#
 void incrementar (Incremento* x) {
   while (1) {
@@ -51,7 +50,6 @@ void imprimir (Incremento* x) {
     sleep(1);
   }
 }
-
 int main () {
   Incremento* x = new Incremento();
   thread Prcs[2];

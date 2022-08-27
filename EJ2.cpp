@@ -1,5 +1,5 @@
 /*
-  Tema: "Monitores - Semaforo Binario - Monitores"
+  Tema: "Monitores - Semaforo Binario"
   Curso: "Algoritmos y Programacion Paralela"
   Fecha: 23/08/22
 */
