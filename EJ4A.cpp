@@ -1,5 +1,5 @@
 /*
-  Tema: "Monitores - Productor-Consumidor"
+  Tema: "Monitores - Lector/Escritor caso#1"
   Curso: "Algoritmos y Programacion Paralela"
   Fecha: 23/08/22
 */

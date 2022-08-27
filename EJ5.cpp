@@ -1,5 +1,5 @@
 /*
-  Tema: "Monitores - Productor-Consumidor"
+  Tema: "Monitores - Filosofos Comensales"
   Curso: "Algoritmos y Programacion Paralela"
   Fecha: 23/08/22
 */
