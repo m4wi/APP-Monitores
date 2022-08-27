@@ -41,28 +41,32 @@ void producerx(){
     srand((unsigned)time(0));
     while (1) {
         value = rand()%210;
-        y->push(value);
+        Buffer.run([&](){
+            push(value);
+        });
         sleep(1);
     }
 }
 void consumerx(){
     int value1 = 0;
     while (1) {
-        y->pop(&value1);
+        Buffer.run([&](){
+            pop(&value1);
+        });
         cout <<"$ Consumer pop : "<<value1<<endl;
         sleep(1);
     }
 }
 
 int main () {
-    Buffer* y = new Buffer();
+    clleno = new Condition(&Buffer);
+    cvacio = new Condition(&Buffer);
     thread Prcs[2];
-    Prcs[0] = thread(producerx,y);
-    Prcs[1] = thread(consumerx,y);
+    Prcs[0] = thread(producerx);
+    Prcs[1] = thread(consumerx);
 
     Prcs[0].join();
     Prcs[1].join();
 
-    delete y;
     return 0;
 }

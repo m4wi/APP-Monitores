@@ -4,7 +4,7 @@
   Fecha: 23/08/22
 */
 #include <iostream>
-#include <unistd.h>
+#include <chrono>
 #include <thread>
 #include "monitor.h"
 #define N 5
@@ -38,10 +38,10 @@ void openWriting(){
 }
 void closeWriting(){
   	writing = false;
-  	if (!(reader->empty()))
-  		reader->resume();
+  	if (writer->empty() == true)
+  		writer->resume();
   	else
-		writer->resume();
+		reader->resume();
 }
 
 //-------[HILOS]----------------
@@ -72,28 +72,28 @@ void escritor (int i) {
 		});
 	}
 }
-
 //-----------------------------
 int main () {
 	ios::sync_with_stdio(false), cout.tie(nullptr);
 	writer = new Condition(&PLEC);
 	reader = new Condition(&PLEC);
 
-	thread Lector[2];
-	thread Escritor[N];
-    
+	thread Lector[N];
+	thread Escritor[2];
+
 	short i = 0;
 
 	for (i = 0; i < 2 ; i++)
+		Escritor[i] = thread(escritor,i);
+
+	for (i = 0; i < N ; i++)
 		Lector[i] = thread(lector,i);
 
 	for (i = 0; i < N ; i++)
-		Escritor[i] = thread(escritor,i);
-
-    for (i = 0; i < N ; i++)
-		if (Escritor[i].joinable()) Escritor[i].join();
+		if (Lector[i].joinable()) Lector[i].join();
 
 	for (i = 0; i < 2 ; i++)
-		if (Lector[i].joinable()) Lector[i].join();
-  return 0;
+		if (Escritor[i].joinable()) Escritor[i].join();
+
+	return 0;
 }
