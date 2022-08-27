@@ -6,80 +6,51 @@
 #include <iostream>
 #include <unistd.h>
 #include <thread>
-#include "ink.h"
+#include "monitor.h"
 #define N 5
-
 using namespace std;
+Monitor cena;
+int state[N];
+Condition* dormido[N];
 
-class Cena : public Monitor {
-  private:
-    int state[N];
-    Condition* dormido[N];
-    int i;
-  public:
-    Cena();
-    ~Cena();
-    void take(int);
-    void drop(int);
-    void eval(int);
-};
-Cena::Cena(){
-    for(i = 0; i < N; i++){
-    dormido[i] = new Condition();
-        state[i] = -1;
-    }
-}
-Cena::~Cena(){
-    for (i = 0; i < N; i++)
-        delete dormido[i];
-}
-void Cena::eval(int k) {
-    wait_m_mutex();
+void eval(int k) {
     if (((state[k] == 0) && state[(k+N-1) % N]) != 1 && (state[(k+1) % N] != 1)) {
         state[k] = 1;
-        resume(dormido[k]);
+        dormido[k]->resume();
     }
-    if (get_m_next_count() > 0)
-        signal_m_next();
-    else 
-        signal_m_mutex();
 }
-void Cena::take(int i) {
-    wait_m_mutex();
+void take(int i) {
     state[i] = 0;
     eval(i);
     if (state[i] != 1)
-        delay(dormido[i]);
-    if (get_m_next_count() > 0)
-        signal_m_next();
-    else 
-        signal_m_mutex();
+        dormido[i]->delay();
 }
-void Cena::drop(int i){
-    wait_m_mutex();
+void drop(int i){
     state[i] = -1;
     eval((i-1 + N) % N);
     eval((i+1) % N);
-    if (get_m_next_count() > 0)
-        signal_m_next();
-    else 
-        signal_m_mutex();
 }
-
-Cena* rd = new Cena();
 
 void filosofo (int i) {
     while(1) {
         cout << "Piensa : " << i <<endl;
-        rd->take(i);
+        cena.run([&](){
+            take(i);
+        });
         cout << "Come : " << i <<endl;
-        rd->drop(i);
+        cena.run([&](){
+            drop(i);
+        });
     }
 }
 
 int main () {
     ios::sync_with_stdio(false), cout.tie(nullptr);
     short i = 0;
+    for (i = 0; i < N; i++) {
+        dormido[i] = new Condition(&cena);
+        state[i] = -1;
+    }
     thread Fil[N];
     for (i = 0; i < N; i++)
         Fil[i] = thread(filosofo,i);
@@ -88,6 +59,7 @@ int main () {
         Fil[i].join();
 
     while(1) NULL;
-    delete rd;
+    for (i = 0; i < N; i++)
+        delete dormido[i];
     return 0;
 }

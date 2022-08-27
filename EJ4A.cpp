@@ -8,7 +8,6 @@
 #include <thread>
 #include "monitor.h"
 #define N 5
-
 using namespace std;
 
 Monitor PLEC;
@@ -25,7 +24,6 @@ void openReading(){
 	++lec;
 	reader->resume();
 }
-
 void closeReading(){
 	--lec;
 	if (lec == 0)
@@ -47,26 +45,22 @@ void closeWriting(){
 //-------[HILOS]----------------
 
 void lector (int i) {
-	//srand((unsigned)time(NULL));
 	while (1) {
 		PLEC.run([&](){
 			openReading();
 		});
 		cout << "Leer Recurso : "<<i<<endl;
-		//this_thread::sleep_for(chrono::milliseconds(rand()%10));
 		PLEC.run([&](){
 			closeReading();
 		});
 	}
 }
 void escritor (int i) {
-	//srand((unsigned)time(NULL));
 	while (1) {
 		PLEC.run([&](){
 			openWriting();
 		});
 		cout << "Escribir Recurso : "<<i<<endl;
-		//this_thread::sleep_for(chrono::milliseconds(rand()%50));
 		PLEC.run([&](){
 			closeWriting();
 		});
@@ -94,6 +88,5 @@ int main () {
 
 	for (i = 0; i < 2 ; i++)
 		if (Escritor[i].joinable()) Escritor[i].join();
-
 	return 0;
 }
