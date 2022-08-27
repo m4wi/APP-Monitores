@@ -7,66 +7,36 @@
 #include <iostream>
 #include <unistd.h>
 #include <thread>
-#include "ink.h"
-
+#include "monitor.h"
+#define MAXSIZE 10
 using namespace std;
 
-class Buffer : public Monitor {
-    private:
-        Condition* clleno;
-        Condition* cvacio;
-        int queue[10];
-        int frente,final,slots;
-    public:
-        Buffer();
-        ~Buffer();
-        void push(int);
-        void pop(int *);
-};
+Monitor Buffer;
+Condition* clleno = NULL;
+Condition* cvacio = NULL;
+int queue[MAXSIZE];
+int frente = 0,final = -1,slots = 0;
 
-Buffer::Buffer() : Monitor() {
-    frente = 0;
-    final = -1;
-    slots = 0;
-    clleno = new Condition();
-    cvacio = new Condition();
-}
-Buffer::~Buffer() {
-    delete clleno;
-    delete cvacio;
-}
 
-void Buffer::push(int x) {
-    wait_m_mutex();
-    if (slots == 10) {
-        delay(clleno);
-    }
+void push(int x) {
+    if (slots == 10)
+        clleno->delay();
     final = (final + 1) % 10;
     queue[final] = x;
     slots++;
     cout << "# Producer push : "<<x<<endl;
-    resume(cvacio);
-    if (get_m_next_count() > 0) {
-        signal_m_next();
-    }
-    else signal_m_mutex();
+    cvacio->resume();
 }
-void Buffer::pop(int* x){
-    wait_m_mutex();
-    if (slots == 0){
-        delay(cvacio);
-    }
+void pop(int* x){
+    if (slots == 0)
+        cvacio->delay();
     *x = queue[frente];
     frente = (frente + 1) % 10;
     slots--;
-    resume(clleno);
-    if (get_m_next_count() > 0) {
-        signal_m_next();
-    }
-    else signal_m_mutex();    
+    clleno->resume();
 }
 
-void producerx(Buffer* y){
+void producerx(){
     int value = 0;
     srand((unsigned)time(0));
     while (1) {
@@ -75,7 +45,7 @@ void producerx(Buffer* y){
         sleep(1);
     }
 }
-void consumerx(Buffer* y){
+void consumerx(){
     int value1 = 0;
     while (1) {
         y->pop(&value1);

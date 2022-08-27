@@ -3,91 +3,63 @@
   Curso: "Algoritmos y Programacion Paralela"
   Fecha: 23/08/22
 */
-
 #include <iostream>
 #include <unistd.h>
 #include <thread>
-#include "ink.h"
+#include "monitor.h"
 
 using namespace std;
 
-class BinarySemaphore : public Monitor {
-  private:
-    bool sem_b;
-    Condition* c;
-  public:
-    BinarySemaphore();
-    ~BinarySemaphore();
-    //procedimientos
-    void wait();
-    void signal();
-};
+Monitor xs;
+bool sem_b = false;
+Condition* c = NULL;
 
-BinarySemaphore::BinarySemaphore() : Monitor() {
-  sem_b = false;
-  c = new Condition();
-}
-BinarySemaphore::~BinarySemaphore(){
-  delete c;
-}
-void BinarySemaphore::wait() {
-  wait_m_mutex();
+void wait() {
   if (sem_b == true) {
-    delay(c);
+    c->delay();
     sem_b = true;
   }
-  if (get_m_next_count() > 0) {
-    signal_m_next();
-  }
-  else signal_m_mutex();
 }
-void BinarySemaphore::signal() {
-  wait_m_mutex();
-  if (empty(c) == false) resume(c);
+void signal() {
+  if (c->empty() == false)
+    c->resume();
   else sem_b = false;
-  if (get_m_next_count() > 0) {
-    signal_m_next();
-  }
-  else signal_m_mutex();
 }
 
 //---------------------------------------------->
 int i = 0;
 
-void P1(BinarySemaphore* s) {
-  while(i < 25){
+void P1() {
+  while (true) {
     sleep(1);
     cout << "a\n";
-    s->signal();
+    xs.run([&](){
+        signal();
+    });
     sleep(1);
     cout << "b\n";
-    i++;
   }
 }
-
-void P2(BinarySemaphore *s) {
-  while(i < 25){
+void P2() {
+  while (true) {
     sleep(1);
     cout << "c\n";
-    s->wait();
+    xs.run([&](){
+        wait();
+    });
     sleep(1);
     cout << "d\n";
-    i++;
   }
 }
 //---------------------------------------------->
 
 int main () {
-  BinarySemaphore* s;
-  s = new BinarySemaphore();
-  
-  thread P[2];
-  P[0] = thread(P1,s);
-  P[1] = thread(P2,s);
+    c = new Condition(&xs);
+    thread P[2];
+    P[0] = thread(P1);
+    P[1] = thread(P2);
 
-  P[0].join();
-  P[1].join();
-  
-  delete s;
+    while(1) NULL;
+    delete c;
   return 0;
 }
